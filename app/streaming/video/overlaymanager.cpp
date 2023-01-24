@@ -1,5 +1,6 @@
 #include "overlaymanager.h"
 #include "path.h"
+#include <iostream>
 
 using namespace Overlay;
 
@@ -14,6 +15,8 @@ OverlayManager::OverlayManager() :
 
     m_Overlays[OverlayType::OverlayStatusUpdate].color = {0xCC, 0x00, 0x00, 0xFF};
     m_Overlays[OverlayType::OverlayStatusUpdate].fontSize = 36;
+
+    m_Overlays[OverlayType::OverlayGraph].color = {0xCC, 0x00, 0x00, 0xFF};
 
     // While TTF will usually not be initialized here, it is valid for that not to
     // be the case, since Session destruction is deferred and could overlap with
@@ -111,44 +114,74 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         return;
     }
 
-    // Construct the required font to render the overlay
-    if (m_Overlays[type].font == nullptr) {
-        if (m_FontData.isEmpty()) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL overlay font failed to load");
-            return;
-        }
-
-        // m_FontData must stay around until the font is closed
-        m_Overlays[type].font = TTF_OpenFontRW(SDL_RWFromConstMem(m_FontData.constData(), m_FontData.size()),
-                                               1,
-                                               m_Overlays[type].fontSize);
-        if (m_Overlays[type].font == nullptr) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "TTF_OpenFont() failed: %s",
-                        TTF_GetError());
-
-            // Can't proceed without a font
-            return;
-        }
-    }
-
     SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, nullptr);
-
     // Free the old surface
     if (oldSurface != nullptr) {
         SDL_FreeSurface(oldSurface);
     }
 
-    if (m_Overlays[type].enabled) {
-        // The _Wrapped variant is required for line breaks to work
-        SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
-                                                              m_Overlays[type].text,
-                                                              m_Overlays[type].color,
-                                                              1024);
-        SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+
+    if (type != OverlayType::OverlayGraph) {
+        // Construct the required font to render the overlay
+        if (m_Overlays[type].font == nullptr) {
+            if (m_FontData.isEmpty()) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                            "SDL overlay font failed to load");
+                return;
+            }
+
+            // m_FontData must stay around until the font is closed
+            m_Overlays[type].font = TTF_OpenFontRW(SDL_RWFromConstMem(m_FontData.constData(), m_FontData.size()),
+                                                1,
+                                                m_Overlays[type].fontSize);
+            if (m_Overlays[type].font == nullptr) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "TTF_OpenFont() failed: %s",
+                            TTF_GetError());
+
+                // Can't proceed without a font
+                return;
+            }
+        }
+
+        if (m_Overlays[type].enabled) {
+            // The _Wrapped variant is required for line breaks to work
+            SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
+                                                                m_Overlays[type].text,
+                                                                m_Overlays[type].color,
+                                                                1024);
+
+            // auto rdr = SDL_CreateSoftwareRenderer(surface);
+            // std::cout << "color " << SDL_SetRenderDrawColor(rdr, 242, 0, 0, 255) << std::endl;
+            // std::cout << "line " << SDL_RenderDrawLine(rdr, 0, 0, 1000, 1000) << std::endl;
+            // SDL_RenderPresent(rdr);
+            // SDL_DestroyRenderer(rdr);
+            SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+        }
+    } else {
+        if (m_Overlays[type].enabled) {
+          // SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_Overlays[OverlayType::OverlayDebug].font,
+          //                                                       "llllloooooooooooooooooooooooooooooooooooooolllllllll",
+          //                                                       m_Overlays[type].color,
+          //                                                       1024);
+
+            auto surface = SDL_CreateRGBSurfaceWithFormat(0, 500, 500, 32, SDL_PIXELFORMAT_BGRA32);
+            auto rdr = SDL_CreateSoftwareRenderer(surface);
+            std::cout << "color " << SDL_SetRenderDrawColor(rdr, 242, 0, 0, 255) << std::endl;
+            std::cout << "line " << SDL_RenderDrawLine(rdr, 0, 0, 500, 500) << std::endl;
+            SDL_RenderPresent(rdr);
+            SDL_DestroyRenderer(rdr);
+            SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+            // auto rdr = SDL_CreateSoftwareRenderer(surface);
+            // std::cout << "color " << SDL_SetRenderDrawColor(rdr, 242, 0, 0, 255) << std::endl;
+            // std::cout << "line " << SDL_RenderDrawLine(rdr, 0, 0, 500, 500) << std::endl;
+            // SDL_RenderPresent(rdr);
+            // SDL_DestroyRenderer(rdr);
+            // SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+        }
+
     }
 
-    // Notify the renderer
+    // Notify the rdr
     m_Renderer->notifyOverlayUpdated(type);
 }

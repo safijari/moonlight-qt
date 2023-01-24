@@ -10,6 +10,7 @@ namespace Overlay {
 enum OverlayType {
     OverlayDebug,
     OverlayStatusUpdate,
+    OverlayGraph,
     OverlayMax
 };
 
@@ -45,6 +46,7 @@ private:
         int fontSize;
         SDL_Color color;
         char text[512];
+        int data[512];
 
         TTF_Font* font;
         SDL_Surface* surface;

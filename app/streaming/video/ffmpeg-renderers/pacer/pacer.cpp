@@ -13,6 +13,7 @@
 #endif
 
 #include <SDL_syswm.h>
+#include <iostream>
 
 // Limit the number of queued frames to prevent excessive memory consumption
 // if the V-Sync source or renderer is blocked for a while. It's important
@@ -100,6 +101,7 @@ void Pacer::renderOnMainThread()
 
 int Pacer::vsyncThread(void *context)
 {
+  std::cout << "in vsync thread" << std::endl;
     Pacer* me = reinterpret_cast<Pacer*>(context);
 
 #if SDL_VERSION_ATLEAST(2, 0, 9)
@@ -133,6 +135,7 @@ int Pacer::vsyncThread(void *context)
 
 int Pacer::renderThread(void* context)
 {
+  std::cout << "in render thread" << std::endl;
     Pacer* me = reinterpret_cast<Pacer*>(context);
 
     if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
@@ -163,6 +166,7 @@ int Pacer::renderThread(void* context)
         AVFrame* frame = me->m_RenderQueue.dequeue();
         me->m_FrameQueueLock.unlock();
 
+        std::cout << "sending frame to be rendered" << std::endl;
         me->renderFrame(frame);
     }
 

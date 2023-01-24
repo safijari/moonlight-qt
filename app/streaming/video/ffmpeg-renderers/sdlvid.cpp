@@ -4,6 +4,7 @@
 #include "streaming/streamutils.h"
 
 #include <Limelight.h>
+#include <iostream>
 
 SdlRenderer::SdlRenderer()
     : m_VideoFormat(0),
@@ -203,6 +204,7 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, newSurface);
             SDL_FreeSurface(newSurface);
         }
+
 
         // If we have an overlay texture, render it too
         if (m_OverlayTextures[type] != nullptr) {

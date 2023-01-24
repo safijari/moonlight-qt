@@ -12,6 +12,7 @@
 
 #include <SDL_render.h>
 #include <SDL_syswm.h>
+#include <iostream>
 
 // These are extensions, so some platform headers may not provide them
 #ifndef EGL_PLATFORM_WAYLAND_KHR
@@ -190,6 +191,9 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
     // Upload a new overlay texture if needed
     SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
     if (newSurface != nullptr) {
+      if (type == Overlay::OverlayType::OverlayGraph) {
+        std::cout << "numbnuts" << std::endl;
+      }
         SDL_assert(!SDL_MUSTLOCK(newSurface));
         SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
 
@@ -207,6 +211,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
             packedPixelData = malloc(newSurface->w * newSurface->h * newSurface->format->BytesPerPixel);
             if (!packedPixelData) {
                 SDL_FreeSurface(newSurface);
+                std::cout << "surface ain't tight" << std::endl;
                 return;
             }
 
@@ -235,6 +240,9 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
             // Top left
             overlayRect.x = 0;
             overlayRect.y = m_ViewportHeight - newSurface->h;
+        } else if (type == Overlay::OverlayGraph) {
+          overlayRect.x = 0;
+          overlayRect.y = 0;
         } else {
             SDL_assert(false);
         }

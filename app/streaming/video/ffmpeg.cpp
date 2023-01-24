@@ -1217,6 +1217,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
             stringifyVideoStats(lastTwoWndStats, Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug));
             Session::get()->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayDebug);
+            Session::get()->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayGraph);
         }
 
         // Accumulate these values into the global stats
